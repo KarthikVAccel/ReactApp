@@ -1,0 +1,82 @@
+/* 🔹 CSS Variables */
+:root {
+  --primary: #0d6efd;
+  --bg-gradient: linear-gradient(to right, white, #6610f2);
+  --spacing: 16px;
+}
+
+body {
+  /* 🔹 Layout (Flex) */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: var(--bg-gradient);
+  font-family: Arial, sans-serif;
+}
+
+/* 🔹 Box Model + Borders + Shadows */
+.card {
+  background: #fff;
+  width: 300px;
+  padding: var(--spacing);
+  margin: var(--spacing);
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+
+  /* 🔹 Transition for hover effect */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  /* 🔹 Transform & Shadow */
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+/* 🔹 Image + Border */
+.profile-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px solid var(--primary);
+  display: block;
+  margin: 0 auto var(--spacing);
+  filter: grayscale(10%); /* Filter */
+}
+
+/* 🔹 Text & Fonts */
+.name {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--primary)!important;
+  margin-bottom: 8px;
+}
+
+.bio {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: var(--spacing);
+  line-height: 1.5;
+}
+
+/* 🔹 Lists */
+.social-links {
+  list-style: none; /* removes bullets */
+  padding: 0;
+  display: flex;
+  justify-content: space-around;
+}
+
+.social-links li a {
+  text-decoration: none;
+  color: var(--primary);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.social-links li a:hover {
+  color: #6610f2;
+}
