@@ -2,7 +2,7 @@ import React from "react";
 
 const paragraph = (props) =>{
     return (
-        <p >
+        <p onClick={props.onclick}>
             {props.text}
         </p>
     )

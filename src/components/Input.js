@@ -2,7 +2,7 @@ import React from "react";
 
 const Input = (props) =>{
     return (
-        <input type={props.inputFromProps}  onChange={props.functionPassed}>
+        <input checked={props.checked} type={props.inputTypeFromProps}  onChange={props.functionPassed}>
             {props.text}
         </input>
     )
