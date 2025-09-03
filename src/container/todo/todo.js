@@ -22,9 +22,12 @@ let [to, setTo] = useState([]);
           <Input
             checked={item.isComplete}
             functionPassed={(e) => {
-              let v = to;
-              v[key] = e.target.checked;
-              setTo([...v]);
+              // let v = to;
+              // v[key] = e.target.checked;
+              // setTo([...v]);
+              dispatch(setComplete({
+                  index:key,isComplete:e.target.checked
+                }))
             }}
             inputTypeFromProps={"checkbox"}
           ></Input>
@@ -32,6 +35,7 @@ let [to, setTo] = useState([]);
           <Paragraph
             onclick={() => {
               setIndex(key);
+              setEditValue(item.text)
               setEdit(true);
             }}
             text={item.text}
@@ -55,6 +59,7 @@ let [to, setTo] = useState([]);
             functionPassed={(e) => {
               setEditValue(e.target.value);
             }}
+            text={editValue?editValue:''}
             inputTypeFromProps={"text"}
           ></Input>
           <Button
