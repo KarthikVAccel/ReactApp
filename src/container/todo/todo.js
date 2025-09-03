@@ -3,14 +3,26 @@ import Button from "../../components/button";
 import Paragraph from "../../components/paragraph";
 import Input from "../../components/Input";
 const Todo = () => {
+let [to, setTo] = useState([]);
+  let [isEdit, setEdit] = useState(false);
+  let [index, setIndex] = useState(null);
+  let [editValue, setEditValue] = useState(null);
+  useEffect(()=>{
+    console.log("everytime")
+  }) // everytime. 
+
+useEffect(()=>{
+   console.log("OneTime")
+},[])//only once
+ 
+useEffect(()=>{
+  console.log("runs When Todo ")
+},[to])// when count change. 
   let intialState = {
     text: "Task",
     isComplete: false,
   };
-  let [to, setTo] = useState([]);
-  let [isEdit, setEdit] = useState(false);
-  let [index, setIndex] = useState(null);
-  let [editValue, setEditValue] = useState(null);
+  
   return (
     <>
       {to.map((item, key) => {

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Leave Management Tool</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+      body {
+        padding: 20px;
+      }
+      .lop-half {
+        background-color: #fff3cd;
+      }
+      .lop-full {
+        background-color: #f8d7da;
+      }
+      .nav-tabs .nav-link.active {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+   <!-- Navbar with Logo + Tabs -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
+  <div class="container-fluid">
+    <!-- Logo -->
+    <a class="navbar-brand d-flex align-items-center" href="#">
+      <img src="channels4_profile.jpg" alt="Logo" width="40" height="40" class="me-2">
+      <span class="fw-bold">Leave Management</span>
+    </a>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs ms-auto">
+      <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#recordsPage">Leave Records</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#summaryPage">Summary</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#settingsPage">Settings</a></li>
+    </ul>
+  </div>
+</nav>
+
+
+    <div class="tab-content">
+      <!-- Leave Records -->
+      <div class="tab-pane fade show active" id="recordsPage">
+        <div class="d-flex justify-content-between mb-3">
+          <div>
+            <label>From: <input type="date" id="filterFrom" /></label>
+            <label>To: <input type="date" id="filterTo" /></label>
+            <button class="btn btn-sm btn-primary" onclick="loadTable()">
+              Apply Filter
+            </button>
+          </div>
+          <div>
+            <input
+              type="file"
+              id="importFile"
+              onchange="importExcel(event)"
+              hidden
+            />
+            <button
+              class="btn btn-success btn-sm"
+              onclick="document.getElementById('importFile').click()"
+            >
+              Import Excel
+            </button>
+            <button class="btn btn-info btn-sm" onclick="exportExcel()">
+              Export Excel
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="openCreateModal()">
+              + Create
+            </button>
+          </div>
+        </div>
+        <table class="table table-bordered" id="recordsTable">
+          <thead class="table-light">
+            <tr>
+              <th>Name</th>
+              <th>Date</th>
+              <th>Leave Type</th>
+              <th>Day</th>
+              <th>Hour</th>
+              <th>Planned/Unplanned</th>
+              <th>Reason</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Summary -->
+      <div class="tab-pane fade" id="summaryPage">
+        <div class="d-flex mb-3">
+          <select
+            id="monthSel"
+            class="form-select me-2"
+            style="width: 150px"
+          ></select>
+          <select
+            id="yearSel"
+            class="form-select me-2"
+            style="width: 150px"
+          ></select>
+          <select
+            id="empSel"
+            class="form-select me-2"
+            style="width: 200px"
+          ></select>
+          <button class="btn btn-primary" onclick="showSummary()">
+            Apply Filter
+          </button>
+        </div>
+        <table class="table table-bordered" id="summaryTable">
+          <thead class="table-light">
+            <tr>
+              <th>Employee</th>
+              <th>Leaves</th>
+              <th>Permissions</th>
+              <th>Late</th>
+              <th>Half LOP</th>
+              <th>Full LOP</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Settings -->
+      <div class="tab-pane fade" id="settingsPage">
+        <div class="card p-3">
+          <h4 class="mb-3 text-primary">Manage Employees</h4>
+          <div id="employeeList"></div>
+          <button class="btn btn-success mt-2" onclick="openEmployeeModal()">
+            + Add Employee
+          </button>
+
+          <h4 class="mt-4 mb-3 text-primary">Manage Leave Types</h4>
+          <div id="leaveTypeList"></div>
+          <button class="btn btn-success mt-2" onclick="openLeaveTypeModal()">
+            + Add Leave Type
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="modal fade" id="leaveModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Leave Form</h5>
+            <button class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="editIndex" />
+            <div class="mb-2">
+              <label>Name</label>
+              <select id="name" class="form-select"></select>
+            </div>
+            <div class="mb-2">
+              <label>Date</label>
+              <input type="date" id="date" class="form-control" />
+            </div>
+            <div class="mb-2">
+              <label>Leave Type</label>
+              <select id="leaveType" class="form-select"></select>
+            </div>
+            <div class="mb-2">
+              <label>Day</label>
+              <input type="text" id="day" class="form-control" />
+            </div>
+            <div class="mb-2">
+              <label>Hour</label>
+              <input type="number" id="hour" class="form-control" />
+            </div>
+            <div class="mb-2">
+              <label>Planned/Unplanned</label>
+              <select id="planned" class="form-select">
+                <option value="Planned">Planned</option>
+                <option value="UnPlanned">UnPlanned</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label>Reason</label>
+              <input type="text" id="reason" class="form-control" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancel
+            </button>
+            <button class="btn btn-primary" onclick="saveLeave()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // --- Master Data ---
+      function getEmployees() {
+        let emps = JSON.parse(localStorage.getItem("employees"));
+        if (!emps) {
+          // only assign defaults if NOTHING is stored
+          emps = [
+            "Abinaya",
+            "Amal Suresh",
+            "Anif",
+            "Anirudhan",
+            "Anitha S",
+            "Arockiya Vinitha",
+            "Arunmozhivarman",
+            "Bharathi",
+            "Boopathi M",
+            "Danush Tom",
+            "Esai Jothi",
+            "Hariharan",
+            "jayashree",
+            "John Silas",
+            "Kalyan",
+            "kouser banu",
+            "kamalesh P",
+            "Krishna Raj",
+            "krishnakumar c",
+            "Keerthiga",
+            "Madhuvanthiya",
+            "Malavika",
+            "Maria Swathi S",
+            "Muthuselvi",
+            "Meena",
+            "Muthuramalingam",
+            "Meganathan",
+            "Muhammed Shiyahudheen",
+            "Naveen( Placement)",
+            "Paramesh",
+            "Pavithra",
+            "Preethika",
+            "Prema",
+            "Priya",
+            "Premalatha",
+            "Rajesh Selvaraj",
+            "Rishikumar",
+            "Ramanathan",
+            "Rammesh",
+            "Revanth",
+            "Sagayamary",
+            "Sangeetha R",
+            "Saranya",
+            "Selva",
+            "Shanya",
+            "Shebina X",
+            "Sridevi Durga",
+            "Sriram santhanam",
+            "Subha",
+            "Saishree",
+            "Tamil Selvan",
+            "Venkatesh P",
+            "Venkteshan J",
+            "Vinoth",
+            "Vishnu Priya",
+            "Viswajith",
+            "Karthikraj",
+          ];
+          localStorage.setItem("employees", JSON.stringify(emps));
+        }
+        return emps;
+      }
+
+      function getLeaveTypes() {
+        let types = JSON.parse(localStorage.getItem("leaveTypes"));
+        if (!types) {
+          types = [
+            "permission",
+            "casual leave",
+            "halfday (1st)",
+            "LOP",
+            "halfday (2nd)",
+          ];
+          localStorage.setItem("leaveTypes", JSON.stringify(types));
+        }
+        return types;
+      }
+
+      function ensureEmployee(name) {
+        if (!name) return;
+        let emps = getEmployees();
+        if (!emps.includes(name)) {
+          emps.push(name);
+          localStorage.setItem("employees", JSON.stringify(emps));
+          loadEmployeeDropdowns();
+          loadSettings();
+        }
+      }
+
+      // --- Dropdown Loaders ---
+      function loadEmployeeDropdowns() {
+        let emps = getEmployees();
+        document.getElementById("name").innerHTML = emps
+          .map((n) => `<option>${n}</option>`)
+          .join("");
+        document.getElementById("empSel").innerHTML =
+          `<option value="all">All Employees</option>` +
+          emps.map((n) => `<option>${n}</option>`).join("");
+      }
+      function loadLeaveTypeDropdowns() {
+        let types = getLeaveTypes();
+        document.getElementById("leaveType").innerHTML = types
+          .map((l) => `<option>${l}</option>`)
+          .join("");
+      }
+
+      // --- Load Table ---
+      function loadTable() {
+        let tbody = document.querySelector("#recordsTable tbody");
+        tbody.innerHTML = "";
+        let data = JSON.parse(localStorage.getItem("leaveData")) || [];
+        let from = document.getElementById("filterFrom").value;
+        let to = document.getElementById("filterTo").value;
+
+        data.forEach((r, index) => {
+          let rowDate = new Date(r.date);
+          let show = true;
+          if (from && rowDate < new Date(from)) show = false;
+          if (to && rowDate > new Date(to)) show = false;
+          if (!show) return;
+          let displayDate = new Date(r.date).toLocaleDateString("en-GB");
+          tbody.innerHTML += `<tr>
+          <td>${r.name}</td><td>${displayDate}</td><td>${r.leaveType}</td>
+          <td>${r.day}</td><td>${r.hour}</td><td>${r.planned}</td><td>${r.reason}</td>
+          <td>
+            <button class="btn btn-sm btn-warning me-1" onclick="openEditModal(${index})">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteRow(${index})">Delete</button>
+          </td></tr>`;
+        });
+      }
+
+      // --- Save Leave ---
+      function saveLeave() {
+        let record = {
+          name: document.getElementById("name").value,
+          date: document.getElementById("date").value,
+          leaveType: document.getElementById("leaveType").value,
+          day: document.getElementById("day").value,
+          hour: document.getElementById("hour").value,
+          planned: document.getElementById("planned").value,
+          reason: document.getElementById("reason").value,
+        };
+        if (
+          !record.name ||
+          !record.date ||
+          !record.leaveType ||
+          !record.planned ||
+          !record.reason
+        ) {
+          alert("Fill all fields");
+          return;
+        }
+        ensureEmployee(record.name);
+        let data = JSON.parse(localStorage.getItem("leaveData")) || [];
+        let idx = document.getElementById("editIndex").value;
+        if (idx !== "") data[idx] = record;
+        else data.push(record);
+        localStorage.setItem("leaveData", JSON.stringify(data));
+        loadTable();
+        showSummary();
+        modal.hide();
+      }
+      function deleteRow(i) {
+        let data = JSON.parse(localStorage.getItem("leaveData")) || [];
+        data.splice(i, 1);
+        localStorage.setItem("leaveData", JSON.stringify(data));
+        loadTable();
+        showSummary();
+      }
+
+      // --- Modal Handling ---
+      const modal = new bootstrap.Modal(document.getElementById("leaveModal"));
+      function openCreateModal() {
+        document.getElementById("editIndex").value = "";
+        document.getElementById("date").value = new Date()
+          .toISOString()
+          .split("T")[0];
+        modal.show();
+      }
+      function openEditModal(i) {
+        let d = JSON.parse(localStorage.getItem("leaveData")) || [];
+        let r = d[i];
+        if (!r) return;
+        document.getElementById("editIndex").value = i;
+        document.getElementById("name").value = r.name;
+        document.getElementById("date").value = r.date;
+        document.getElementById("leaveType").value = r.leaveType;
+        document.getElementById("day").value = r.day;
+        document.getElementById("hour").value = r.hour;
+        document.getElementById("planned").value = r.planned;
+        document.getElementById("reason").value = r.reason;
+        modal.show();
+      }
+
+      // --- Import / Export ---
+      function importExcel(e) {
+        let f = e.target.files[0];
+        if (!f) return;
+        let r = new FileReader();
+        r.onload = function (e) {
+          let wb = XLSX.read(new Uint8Array(e.target.result), {
+            type: "array",
+          });
+          let sheet = wb.Sheets[wb.SheetNames[0]];
+          let json = XLSX.utils.sheet_to_json(sheet);
+          let mapped = json.map((row) => {
+            let raw = row["Date"];
+            let dateStr = "";
+            if (typeof raw === "number") {
+              let d = XLSX.SSF.parse_date_code(raw);
+              dateStr = `${d.y}-${String(d.m).padStart(2, "0")}-${String(
+                d.d
+              ).padStart(2, "0")}`;
+            } else if (raw) {
+              let parts = raw.split(/[\/\-]/);
+              if (parts.length === 3) {
+                if (parts[2].length === 4) {
+                  dateStr = `${parts[2]}-${parts[1].padStart(
+                    2,
+                    "0"
+                  )}-${parts[0].padStart(2, "0")}`;
+                } else dateStr = raw;
+              }
+            }
+            ensureEmployee(row["Name"]);
+            return {
+              name: row["Name"] || "",
+              date: dateStr,
+              leaveType: row["Leave Type"] || "",
+              day: row["Day"] || "",
+              hour: row["Hour"] || "",
+              planned: row["Planned/ Unplanned"] || "",
+              reason: row["Reason"] || "",
+            };
+          });
+          let ex = JSON.parse(localStorage.getItem("leaveData")) || [];
+          localStorage.setItem("leaveData", JSON.stringify(ex.concat(mapped)));
+          loadTable();
+          showSummary();
+          alert("Excel Imported!");
+        };
+        r.readAsArrayBuffer(f);
+      }
+      function exportExcel() {
+        let d = JSON.parse(localStorage.getItem("leaveData")) || [];
+        let formatted = d.map((r) => ({
+          Name: r.name,
+          Date: new Date(r.date).toLocaleDateString("en-GB"),
+          "Leave Type": r.leaveType,
+          Day: r.day,
+          Hour: r.hour,
+          "Planned/ Unplanned": r.planned,
+          Reason: r.reason,
+        }));
+        let ws = XLSX.utils.json_to_sheet(formatted);
+        let wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "LeaveData");
+        XLSX.writeFile(wb, "LeaveData.xlsx");
+      }
+
+      // --- Summary ---
+      function showSummary() {
+        let d = JSON.parse(localStorage.getItem("leaveData")) || [];
+        let m = parseInt(monthSel.value);
+        let y = parseInt(yearSel.value);
+        let ef = empSel.value;
+        d = d.filter((r) => {
+          let dt = new Date(r.date);
+          return (
+            dt.getMonth() + 1 === m &&
+            dt.getFullYear() === y &&
+            (ef === "all" || r.name === ef)
+          );
+        });
+        let summary = {};
+        d.forEach((r) => {
+          let emp = r.name;
+          if (!summary[emp])
+            summary[emp] = {
+              leave: 0,
+              permission: 0,
+              late: 0,
+              halfLOP: 0,
+              fullLOP: 0,
+            };
+          if (r.leaveType.toLowerCase().includes("leave")) summary[emp].leave++;
+          if (r.leaveType.toLowerCase().includes("permission")) {
+            summary[emp].permission++;
+            let c = summary[emp].permission;
+            if (c === 4) summary[emp].halfLOP++;
+            if (c === 5) summary[emp].fullLOP++;
+          }
+          if (r.leaveType.toLowerCase().includes("late")) summary[emp].late++;
+        });
+        let tbody = document.querySelector("#summaryTable tbody");
+        tbody.innerHTML = "";
+        for (let n in summary) {
+          let cls = "";
+          if (summary[n].fullLOP > 0) cls = "lop-full";
+          else if (summary[n].halfLOP > 0) cls = "lop-half";
+          tbody.innerHTML += `<tr class="${cls}"><td>${n}</td><td>${summary[n].leave}</td><td>${summary[n].permission}</td><td>${summary[n].late}</td><td>${summary[n].halfLOP}</td><td>${summary[n].fullLOP}</td></tr>`;
+        }
+      }
+
+      // --- Settings Page ---
+      function loadSettings() {
+        let emps = getEmployees();
+        let eDiv = document.getElementById("employeeList");
+        eDiv.innerHTML = emps
+          .map(
+            (e, i) =>
+              `<div class="d-flex justify-content-between mb-2"><span>${e}</span><div><button class="btn btn-sm btn-warning me-1" onclick="openEmployeeModal(${i})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteEmployee(${i})">Delete</button></div></div>`
+          )
+          .join("");
+        let types = getLeaveTypes();
+        let tDiv = document.getElementById("leaveTypeList");
+        tDiv.innerHTML = types
+          .map(
+            (t, i) =>
+              `<div class="d-flex justify-content-between mb-2"><span>${t}</span><div><button class="btn btn-sm btn-warning me-1" onclick="openLeaveTypeModal(${i})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteLeaveType(${i})">Delete</button></div></div>`
+          )
+          .join("");
+      }
+      function openEmployeeModal(i = null) {
+        let name = i !== null ? getEmployees()[i] : "";
+        let newName = prompt("Enter Employee Name:", name);
+        if (newName) {
+          let emps = getEmployees();
+          if (i !== null) emps[i] = newName;
+          else emps.push(newName);
+          localStorage.setItem("employees", JSON.stringify(emps));
+          loadEmployeeDropdowns();
+          loadSettings();
+        }
+      }
+      function deleteEmployee(i) {
+        let emps = getEmployees();
+        emps.splice(i, 1);
+        localStorage.setItem("employees", JSON.stringify(emps));
+        loadEmployeeDropdowns();
+        loadSettings();
+      }
+      function openLeaveTypeModal(i = null) {
+        let type = i !== null ? getLeaveTypes()[i] : "";
+        let newType = prompt("Enter Leave Type:", type);
+        if (newType) {
+          let types = getLeaveTypes();
+          if (i !== null) types[i] = newType;
+          else types.push(newType);
+          localStorage.setItem("leaveTypes", JSON.stringify(types));
+          loadLeaveTypeDropdowns();
+          loadSettings();
+        }
+      }
+      function deleteLeaveType(i) {
+        let types = getLeaveTypes();
+        types.splice(i, 1);
+        localStorage.setItem("leaveTypes", JSON.stringify(types));
+        loadLeaveTypeDropdowns();
+        loadSettings();
+      }
+
+      // --- Init ---
+      let monthSel = document.getElementById("monthSel"),
+        yearSel = document.getElementById("yearSel"),
+        empSel = document.getElementById("empSel");
+      for (let m = 1; m <= 12; m++)
+        monthSel.innerHTML += `<option value="${m}" ${
+          m === new Date().getMonth() + 1 ? "selected" : ""
+        }>${m}</option>`;
+      for (let y = 2023; y <= 2030; y++)
+        yearSel.innerHTML += `<option value="${y}" ${
+          y === new Date().getFullYear() ? "selected" : ""
+        }>${y}</option>`;
+      loadEmployeeDropdowns();
+      loadLeaveTypeDropdowns();
+      loadTable();
+      showSummary();
+      loadSettings();
+    </script>
+  </body>
+</html>
